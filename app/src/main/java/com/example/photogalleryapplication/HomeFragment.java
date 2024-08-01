@@ -26,6 +26,7 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
+    // UI elements
     FloatingActionButton fab;
     DatabaseReference databaseReference;
     ValueEventListener eventListener;
@@ -40,57 +41,66 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        // Initialize UI elements
         recyclerView = view.findViewById(R.id.recyclerView);
         fab = view.findViewById(R.id.fab);
         searchView = view.findViewById(R.id.search);
 
+        // Setup RecyclerView with GridLayoutManager
         searchView.clearFocus();
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 1);
         recyclerView.setLayoutManager(gridLayoutManager);
 
+        // Setup and show a loading dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setCancelable(false);
         builder.setView(R.layout.progress_layout);
         AlertDialog dialog = builder.create();
         dialog.show();
 
+        // Initialize dataList and adapter
         dataList = new ArrayList<>();
         adapter = new MyAdapter(getContext(), dataList);
         recyclerView.setAdapter(adapter);
 
+        // Setup Firebase database reference and listener
         databaseReference = FirebaseDatabase.getInstance().getReference("Android Uploads");
         eventListener = databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Clear existing data and populate the list with new data from Firebase
                 dataList.clear();
-                for (DataSnapshot itemSnapshot: snapshot.getChildren()){
+                for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
                     DataClass dataClass = itemSnapshot.getValue(DataClass.class);
                     dataClass.setKey(itemSnapshot.getKey());
                     dataList.add(dataClass);
                 }
                 adapter.notifyDataSetChanged();
-                dialog.dismiss();
+                dialog.dismiss(); // Dismiss the loading dialog
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                dialog.dismiss();
+                dialog.dismiss(); // Dismiss the loading dialog on error
             }
         });
 
+        // Setup SearchView listener
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                return false;
+                return false; // No action on query text submit
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                // Call searchList method to filter data based on the search query
                 searchList(newText);
                 return true;
             }
         });
 
+        // Setup FloatingActionButton to open UploadActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -102,10 +112,11 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    public void searchList(String text){
+    // Method to filter data based on the search query
+    public void searchList(String text) {
         ArrayList<DataClass> searchList = new ArrayList<>();
-        for (DataClass dataClass: dataList){
-            if (dataClass.getDataTitle().toLowerCase().contains(text.toLowerCase())){
+        for (DataClass dataClass : dataList) {
+            if (dataClass.getDataTitle().toLowerCase().contains(text.toLowerCase())) {
                 searchList.add(dataClass);
             }
         }
