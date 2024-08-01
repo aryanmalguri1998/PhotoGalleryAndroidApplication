@@ -32,13 +32,18 @@ import com.google.firebase.storage.UploadTask;
 
 public class UpdateActivity extends AppCompatActivity {
 
+    // UI components
     ImageView updateImage;
     Button updateButton;
     EditText updateDesc, updateTitle, updateLang;
+    
+    // Data variables
     String title, desc, lang;
     String imageUrl;
     String key, oldImageURL;
     Uri uri;
+    
+    // Firebase references
     DatabaseReference databaseReference;
     StorageReference storageReference;
 
@@ -47,12 +52,14 @@ public class UpdateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update);
 
+        // Initialize UI components
         updateButton = findViewById(R.id.updateButton);
         updateDesc = findViewById(R.id.updateDesc);
         updateImage = findViewById(R.id.updateImage);
         updateLang = findViewById(R.id.updateLang);
         updateTitle = findViewById(R.id.updateTitle);
 
+        // Register an ActivityResultLauncher for picking an image
         ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -69,6 +76,7 @@ public class UpdateActivity extends AppCompatActivity {
                 }
         );
 
+        // Get data from the intent and set it to the UI
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             Glide.with(UpdateActivity.this).load(bundle.getString("Image")).into(updateImage);
@@ -80,6 +88,7 @@ public class UpdateActivity extends AppCompatActivity {
         }
         databaseReference = FirebaseDatabase.getInstance().getReference("Android Uploads").child(key);
 
+        // Set click listener to pick an image
         updateImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -89,6 +98,7 @@ public class UpdateActivity extends AppCompatActivity {
             }
         });
 
+        // Set click listener to save data
         updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -97,16 +107,19 @@ public class UpdateActivity extends AppCompatActivity {
         });
     }
 
+    // Method to handle data saving
     public void saveData() {
         if (uri != null) {
             storageReference = FirebaseStorage.getInstance().getReference().child("Android Images").child(uri.getLastPathSegment());
 
+            // Show progress dialog
             AlertDialog.Builder builder = new AlertDialog.Builder(UpdateActivity.this);
             builder.setCancelable(false);
             builder.setView(R.layout.progress_layout);
             AlertDialog dialog = builder.create();
             dialog.show();
 
+            // Upload the image to Firebase Storage
             storageReference.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -129,6 +142,7 @@ public class UpdateActivity extends AppCompatActivity {
         }
     }
 
+    // Method to update data in the database
     public void updateData() {
         title = updateTitle.getText().toString().trim();
         desc = updateDesc.getText().toString().trim();
@@ -136,6 +150,7 @@ public class UpdateActivity extends AppCompatActivity {
 
         DataClass dataClass = new DataClass(title, desc, lang, imageUrl);
 
+        // Update the data in Firebase Realtime Database
         databaseReference.setValue(dataClass).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
@@ -171,8 +186,8 @@ public class UpdateActivity extends AppCompatActivity {
         });
     }
 
+    // Method to navigate back to the main activity
     private void navigateToMainActivity() {
-        // Navigate back to MainActivity or equivalent
         Intent intent = new Intent(UpdateActivity.this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
